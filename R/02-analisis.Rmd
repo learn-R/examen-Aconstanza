@@ -1,0 +1,138 @@
+---
+title: "¿Está relacionada la victimización con la percepción de inseguridad?"
+author: "Constanza Acevedo"
+date: "22-11-2021"
+output: 
+  html_document:
+    theme: lumen
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+<div style="text-align: Center"> 
+##### Facultad de Ciencias Sociales ###### 
+##### Departamento de Política y Gobierno #####
+##### Carrera de Ciencia Política y Relaciones Internacionales #####
+</div>
+
+<div style="text-align: Right"> 
+##### Profesora: Valentina Andrade #####
+##### Ayudantes: Dafne Jaime y Nicolás Godoy #####
+</div>
+
+<div style="text-align: Justify">
+
+```{r packages, message=FALSE, warning=FALSE, include=FALSE}
+pacman::p_load(tidyverse, 
+               sjPlot, 
+               sjmisc, 
+               survey, 
+               srvyr)
+```
+
+```{r readRDS, include=FALSE}
+datos_proc <- readRDS(file ="../output/data/datos_proc.rds")
+enusc_design <- as_survey_design(datos_proc, ids = 1, weights = Fact_Pers)
+```
+### I.- Introducción: ###
+
+
+En Latinoamérica uno de los principales problemas detectados por la opinión pública está configurado por la delincuencia, la violencia y las pandillas  (Dammert & Lagos, 2012). En 2011, según el latinobarómetro, la seguridad pública superó al desempleo como la principal preocupación para los latinoamericanos (De Lima & de Paula, 2013). De esta forma, la inseguridad asociada a la criminalidad se ha convertido en un punto importante dentro de las agendas de gobierno.
+
+Entre los factores que influyen en la percepción de seguridad en la ciudadanía y en su dimensión subjetiva (el miedo), se encuentran los factores individuales, físico-territoriales, socio-barriales, institucionales, culturales y, delictuales (Subsecretaría de prevención del delito, 2020).
+
+ En este sentido, el nivel local (municipios) se ha convertido en un ámbito decisivo para la implementación de intervenciones más efectivas, dada la proximidad con la ciudadanía, la mayor visibilidad de los factores que inciden en los problemas abordados y la presión que pueden ejercer las poblaciones directamente afectadas sobre los municipios” (Centro de Seguridad Urbana UAH, 2018).   
+ 
+De esta forma, este estudio estará enfocado en un nivel comunal considerando a aquellas comunas ubicadas en las regiones de Atacama, O’Higgins, Biobío, la Araucanía y Metropolitana, con el fin de identificar qué factores inciden en el aumento de la percepción de inseguridad en la ciudadanía.   
+
+### II.- Desarrollo: ###
+
+La inseguridad asociada a la criminalidad es un fenómeno complejo de resolver y de investigar, sin realizar un análisis en profundidad se tiende a pensar que está relacionado con el aumento de los índices de criminalidad. No obstante, diversas investigaciones han desmontado esta suposición. 
+
+Según Dammert & Lagos (2012), el fenómeno de la percepción del temor es negativa e independiente de la victimización, es decir que la percepción del temor y la victimización no tienen una correlación significativa (Ver tabla N° 1). De esta forma los elementos que pueden generar altos niveles de temor varían entre: desconfianza en las policías, percepción de abandono estatal, aumento de los delitos, baja cohesión social, entre otros. 
+
+```{r tabla1, echo=FALSE, message=FALSE, warning=FALSE}
+datos_proc %>% 
+  select(VP_DC, percepcion) %>% 
+  sjPlot::tab_corr(., corr.method =  "pearson", 
+                   title = "Tabla N°1. Matriz de Correlación",
+                   triangle = "lower",
+                   var.labels = c(c("Victimización","Percepción de inseguridad")),  
+                   digits = 3,
+                   encoding = "UTF-8")
+```
+
+No obstante, aquellas personas que se han visto afectadas por situaciones delictuales, si presentan mayores tasas de preocupación por posibles revictimizaciones. Como se aprecia en el Gráfico N°1, aquellas personas que fueron víctimas de algún delito creen serán nuevamente víctimas dentro de los próximos 12 meses, siendo las mujeres quienes presentan mayores niveles de temor. 
+
+
+```{r grafico1, echo=FALSE, message=FALSE, warning=FALSE}
+plot_scatter(
+  datos_proc,
+  identidad_gen,
+  VP_DC,
+  cvd,
+  title = "Grafico N°1: temor a ser víctima de algún delito según identidad de género",
+  jitter = 0.05)
+```
+
+Siguiendo en la línea de lo mencionado por la Subsecretaria de prevención del delito, los factores individuales, tales como el sexo o la edad de las personas, son algunas de las variables que influyen en la percepción de seguridad. Esto se explica por la vulnerabilidad de ciertos estratos etarios (adultos mayores, y NNA), y por la doble victimización que viven las mujeres y disidencias.  
+
+En función a esto, y sin considerar la exposición a noticias de delitos de mayor connotación social (dada la inexistencia de este tipo de medición), se compararon dos modelos, uno considerando el factor de la edad y el otro considerando el factor de identidad de género. Siendo este último más explicativo que el de la edad, como se puede ver en la Tabla N°2 
+
+
+```{r tabla2, echo=FALSE, message=FALSE, warning=FALSE}
+modelo1 <- lm(percepcion ~ VP_DC + cvd + edad,
+              data = datos_proc,
+              weights = Fact_Pers)
+modelo2 <- lm(percepcion ~ VP_DC + cvd + identidad_gen,
+              data = datos_proc,
+              weights = Fact_Pers)
+sjPlot::tab_model(list(modelo1,modelo2),
+                  string.intercept = "(Intercepto)",
+                  string.pred = "Predictores",
+                  string.est = "Estimación",
+                  p.style = "stars",
+                  show.ci = F,
+                  digits = 3,
+                  dv.labels = c("Modelo 1", "Modelo 2"),
+                  show.reflvl = T,
+                  encoding = "UTF-8")
+```
+
+
+De esta forma, el gráfico N°2, nos muestra que, a nivel comunal, la percepción de aumento de la delincuencia es mayormente compartida entre las mujeres con un 57.1% versus un 42.8% de los hombres. 
+
+    
+```{r grafico2, echo=FALSE, message=FALSE, warning=FALSE}
+datos_proc %>% 
+  filter(percepcion <= 1) %>% 
+  plot_frq(identidad_gen,
+           title = "Gráfico N°2: Percepción de aumento de inseguridad según identidad de género",
+           type = c("bar"))
+```
+
+La ENUSC aún posee falencias en identificar comportamientos que causen inseguridad a las mujeres y disidencias. En este sentido, no considera crímenes de odio, acoso callejero o violencia intrafamiliar. 
+
+### III.- Conclusiones: ###
+
+Según los resultados de la ENUSC 2020, tiene como conclusión una caída en la tasa de victimización. Esto no coincide con los datos obtenidos en la percepción de aumento de la delincuencia, lo que viene a confirmar que son fenómenos que no necesariamente van de la mano. 
+
+La percepción de inseguridad es la consecuencia de diversos factores sociales e individuales, tales como: altas tasas de desigualdad, la desconfianza en las instituciones que garantizan el orden, percepción de abandono estatal, deterioro del tejido social, entre otros. 
+
+Por otro lado, las personas que son víctimas de algún delito suelen estar más alertas que aquellos que no. Independiente de si los índices delictuales van a la baja, los altos índices de percepción de inseguridad se siguen manteniendo en el tiempo. Esto se explica por la demora en recuperar la tranquilidad y la normalidad.
+
+El abordaje del fenómeno de la delincuencia y los problemas asociados a esta involucra particularidades territoriales o contextuales, visiones conceptuales contrapuestas donde se cruzan fundamentos valóricos y políticos. No obstante, existe consenso en la multicausalidad del problema de la delincuencia, lo que requiere el desarrollo de estrategias integrales e intersectoriales que permitan el abordaje de sus causas, manifestaciones y consecuencias.
+          
+### IV.- Referencias ###
+Centro de Seguridad Urbana UAH. (2018, abril). Informe Final: «Levantamiento de Línea Base del estado de gestión municipal en seguridad»" (N.o 1). Centro de Seguridad Urbana, UAH Facultad de Derecho. [http://cead.spd.gov.cl/?wpdmpro=estudio-linea-base-gestion-local&wpdmdl=3002&](http://cead.spd.gov.cl/?wpdmpro=estudio-linea-base-gestion-local&wpdmdl=3002&)
+
+Dammert, L., & Lagos, M. (2012, mayo). La seguridad ciudadana: el problema principal de América Latina. FlacsoAndes. [https://biblio.flacsoandes.edu.ec/libros/139282-opac](https://biblio.flacsoandes.edu.ec/libros/139282-opac)
+
+De Lima, R. S., & de Paula, L. (2013). Seguridad pública y reducción de crímenes violentos en Brasil: logros en gestión y cambios institucionales. En ¿A dónde vamos? (1.a ed., pp. 153–171). Woodrow Wilson International Center for Scholars & CASEDE.
+
+Subsecretaría de Prevención del Delito. (2020).  MINUTA ESTUDIO: FACTORES DETERMINANTES EN LA PERCEPCIÓN DE INSEGURIDAD. Portal CEAD. [http://cead.spd.gov.cl/estudios-y-encuestas/](http://cead.spd.gov.cl/estudios-y-encuestas/)
+
+</div>

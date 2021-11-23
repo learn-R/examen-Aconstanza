@@ -1,0 +1,14 @@
+"0","pacman::p_load(tidyverse, 
+               sjPlot, 
+               sjmisc, 
+               survey, 
+               srvyr,
+               citr)
+"
+"2","Installing package into ‘C:/Users/conny/Documents/R/win-library/4.1’
+(as ‘lib’ is unspecified)
+"
+"2","Warning:"
+"2"," unable to access index for repository http://www.stats.ox.ac.uk/pub/RWin/bin/windows/contrib/4.1:
+  cannot open URL 'http://www.stats.ox.ac.uk/pub/RWin/bin/windows/contrib/4.1/PACKAGES'
+"
